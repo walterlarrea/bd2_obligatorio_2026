@@ -38,3 +38,31 @@ Notas:
 
 - Los scripts usan transacciones cortas (autocommit) para forzar muchas versiones en MVCC.
 - Ajusta `--workers` y `--rows` según tu máquina.
+
+## Docker (levantar contenedores de bases de datos)
+
+Puedes levantar instancias locales de PostgreSQL y MySQL con Docker usando el `docker-compose.yml` incluido en la raíz del proyecto.
+
+1. Levantar los servicios en background:
+
+```bash
+docker-compose up -d
+```
+
+2. Las credenciales por defecto (definidas en `docker-compose.yml`):
+
+- PostgreSQL: `user=postgres`, `password=postgres`, `db=mvcc_db`, puerto `5432`
+- MySQL: `user=mvcc_user`, `password=mvcc_pass`, `db=mvcc_db`, puerto `3306`
+
+3. Después de arrancar los contenedores, ejecuta los scripts de preparación y benchmark desde tu host (ejemplo Postgres):
+
+```bash
+python scripts/setup_db.py --engine postgres --host localhost --port 5432 --user postgres --password postgres --db mvcc_db --rows 1000000
+python scripts/benchmark_runner.py --engine postgres --host localhost --port 5432 --user postgres --password postgres --db mvcc_db --workers 16 --duration 300
+```
+
+4. Para parar y eliminar contenedores y volúmenes:
+
+```bash
+docker-compose down -v
+```

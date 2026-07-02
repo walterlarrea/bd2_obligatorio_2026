@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: mvcc_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mvcc_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./scripts/docker-init/postgres:/docker-entrypoint-initdb.d:ro
+
+  mysql:
+    image: mysql:8.0
+    container_name: mvcc_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: mvcc_db
+      MYSQL_USER: mvcc_user
+      MYSQL_PASSWORD: mvcc_pass
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./mysqldata:/var/lib/mysql
+      - ./scripts/docker-init/mysql:/docker-entrypoint-initdb.d:ro
+
+networks:
+  default:
+    driver: bridge
