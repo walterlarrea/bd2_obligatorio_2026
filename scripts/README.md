@@ -99,6 +99,63 @@ Ejemplos:
 - Solo un motor: `python scripts/run_full_benchmark.py --engines postgres --rows 100000`
 - Sin parar contenedores al final: `python scripts/run_full_benchmark.py --no-stop`
 
+## Resetear Bases de Datos
+
+Antes de ejecutar un nuevo benchmark, es recomendable resetear las bases de datos para asegurar que empiezan en un estado limpio sin datos residuales.
+
+```bash
+python scripts/reset_databases.py
+```
+
+Este script:
+
+1. ✅ Inicia los servicios Docker si no están corriendo
+2. ✅ Elimina la tabla `mvcc_bench` de PostgreSQL y MySQL
+3. ✅ Limpia los contenedores Docker después del reset
+
+**Opciones disponibles:**
+
+```bash
+# Resetear ambas bases de datos (default)
+python scripts/reset_databases.py
+
+# Resetear solo PostgreSQL
+python scripts/reset_databases.py --engine postgres
+
+# Resetear solo MySQL
+python scripts/reset_databases.py --engine mysql
+
+# Saltarse la confirmación (útil en automatización)
+python scripts/reset_databases.py --force
+
+# Mantener contenedores corriendo después del reset
+python scripts/reset_databases.py --no-stop
+```
+
+**Flujo recomendado:**
+
+```bash
+# 1. Resetear bases de datos limpias
+python scripts/reset_databases.py
+
+# 2. Ejecutar benchmark en estado limpio
+python scripts/run_full_benchmark.py --rows 100000 --workers 8 --duration 300
+
+# 3. Revisar resultados en results/benchmark_report.html
+```
+
+**Archivos de salida:**
+
+Los resultados de los benchmarks se guardan en la carpeta `results/`:
+
+- `results/tps_postgres_*.csv` - Throughput de PostgreSQL
+- `results/tps_mysql_*.csv` - Throughput de MySQL
+- `results/metrics_postgres_*.csv` - Métricas MVCC de PostgreSQL
+- `results/metrics_mysql_*.csv` - Métricas MVCC de MySQL
+- `results/comparison_tps.png` - Gráfica comparativa de TPS
+- `results/comparison_metrics.png` - Gráfica comparativa de métricas MVCC
+- `results/benchmark_report.html` - Reporte HTML interactivo
+
 ## Resultados y Análisis
 
 Los scripts generan los siguientes archivos:
