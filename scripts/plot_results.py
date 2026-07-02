@@ -5,6 +5,7 @@ Auto-detects latest `tps_postgres_*.csv`, `tps_mysql_*.csv`, `metrics_postgres_*
 Generates `comparison_tps.png` and `comparison_metrics.png`.
 """
 import glob
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -48,6 +49,8 @@ def plot_metrics(metrics_pg, metrics_my):
     print('Saved results/comparison_metrics.png')
 
 if __name__ == '__main__':
+    # Create the folder for results if it doesn't exist
+    os.makedirs('results', exist_ok=True)
     tps_pg = latest('results/tps_postgres_*.csv')
     tps_my = latest('results/tps_mysql_*.csv')
     m_pg = latest('results/metrics_postgres_*.csv')

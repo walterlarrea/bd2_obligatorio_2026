@@ -1,5 +1,6 @@
 """Generate HTML report with embedded plots and analysis."""
 import glob
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
@@ -85,6 +86,8 @@ def compute_stats(tps_file):
 
 def generate_html(html_file='results/benchmark_report.html'):
     """Generate comprehensive HTML report."""
+    # Create the folder for results if it doesn't exist
+    os.makedirs('results', exist_ok=True)
     # Find latest files
     tps_pg = latest('results/tps_postgres_*.csv')
     tps_my = latest('results/tps_mysql_*.csv')

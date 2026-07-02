@@ -44,6 +44,8 @@ def main():
     stop_event = threading.Event()
     counter = {'count': 0}
     workers = []
+    # Create the folder for results if it doesn't exist
+    os.makedirs('results', exist_ok=True)
     if args.engine == 'postgres':
         # create separate connections per thread
         for _ in range(args.workers):
