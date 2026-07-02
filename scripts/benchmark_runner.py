@@ -51,14 +51,14 @@ def main():
             t = threading.Thread(target=run_worker_postgres, args=(conn, args.table, args.rows, stop_event, counter), daemon=True)
             workers.append((t, conn))
         metrics_conn = connect_postgres(args.host, args.port, args.user, args.password, args.db)
-        metrics_thread = threading.Thread(target=collect_postgres, args=(metrics_conn, args.table, args.metrics_interval, stop_event, f'metrics_postgres_{int(time.time())}.csv'), daemon=True)
+        metrics_thread = threading.Thread(target=collect_postgres, args=(metrics_conn, args.table, args.metrics_interval, stop_event, f'results/metrics_postgres_{int(time.time())}.csv'), daemon=True)
     else:
         for _ in range(args.workers):
             conn = connect_mysql(args.host, args.port, args.user, args.password, args.db)
             t = threading.Thread(target=run_worker_mysql, args=(conn, args.table, args.rows, stop_event, counter), daemon=True)
             workers.append((t, conn))
         metrics_conn = connect_mysql(args.host, args.port, args.user, args.password, args.db)
-        metrics_thread = threading.Thread(target=collect_mysql, args=(metrics_conn, args.metrics_interval, stop_event, f'metrics_mysql_{int(time.time())}.csv'), daemon=True)
+        metrics_thread = threading.Thread(target=collect_mysql, args=(metrics_conn, args.metrics_interval, stop_event, f'results/metrics_mysql_{int(time.time())}.csv'), daemon=True)
 
     # start workers
     for t, _ in workers:
@@ -68,7 +68,7 @@ def main():
     print(f'Starting benchmark: engine={args.engine} workers={args.workers} duration={args.duration}s')
     start = time.time()
     last_count = 0
-    tps_csv = f'tps_{args.engine}_{int(start)}.csv'
+    tps_csv = f'results/tps_{args.engine}_{int(start)}.csv'
     # write header for TPS CSV
     try:
         tfh = open(tps_csv, 'w', newline='')

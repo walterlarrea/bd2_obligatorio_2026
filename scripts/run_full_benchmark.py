@@ -111,8 +111,8 @@ def main():
     
     print("\n" + "="*60)
     print("  Benchmark complete!")
-    print("  📊 Check: comparison_tps.png, comparison_metrics.png")
-    print("  📄 Open: benchmark_report.html in your browser")
+    print("  📊 Check: results/comparison_tps.png, results/comparison_metrics.png")
+    print("  📄 Open: results/benchmark_report.html in your browser")
     print("="*60)
     return 0
 

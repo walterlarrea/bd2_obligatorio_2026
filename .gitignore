@@ -2,8 +2,9 @@
 mysqldata
 pgdata
 
-# 
-*.csv
-*.html
-*.png
+# Ignore generated results
+results
+
+# Ignore Python cache and virtual environment
+__pycache__/
 *.pyc

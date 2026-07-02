@@ -28,8 +28,8 @@ def plot_tps(postgres_tps, mysql_tps):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig('comparison_tps.png')
-    print('Saved comparison_tps.png')
+    plt.savefig('results/comparison_tps.png')
+    print('Saved results/comparison_tps.png')
 
 def plot_metrics(metrics_pg, metrics_my):
     fig, ax1 = plt.subplots(figsize=(10,5))
@@ -44,14 +44,14 @@ def plot_metrics(metrics_pg, metrics_my):
         ax2.set_ylabel('history_list_length', color='tab:blue')
     ax1.set_xlabel('Elapsed seconds')
     fig.tight_layout()
-    plt.savefig('comparison_metrics.png')
-    print('Saved comparison_metrics.png')
+    plt.savefig('results/comparison_metrics.png')
+    print('Saved results/comparison_metrics.png')
 
 if __name__ == '__main__':
-    tps_pg = latest('tps_postgres_*.csv')
-    tps_my = latest('tps_mysql_*.csv')
-    m_pg = latest('metrics_postgres_*.csv')
-    m_my = latest('metrics_mysql_*.csv')
+    tps_pg = latest('results/tps_postgres_*.csv')
+    tps_my = latest('results/tps_mysql_*.csv')
+    m_pg = latest('results/metrics_postgres_*.csv')
+    m_my = latest('results/metrics_mysql_*.csv')
     print('Using:', tps_pg, tps_my, m_pg, m_my)
     plot_tps(tps_pg, tps_my)
     plot_metrics(m_pg, m_my)

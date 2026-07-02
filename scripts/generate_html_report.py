@@ -83,13 +83,13 @@ def compute_stats(tps_file):
         'total_updates': df['total_updates'].iloc[-1] if len(df) > 0 else 0,
     }
 
-def generate_html(html_file='benchmark_report.html'):
+def generate_html(html_file='results/benchmark_report.html'):
     """Generate comprehensive HTML report."""
     # Find latest files
-    tps_pg = latest('tps_postgres_*.csv')
-    tps_my = latest('tps_mysql_*.csv')
-    m_pg = latest('metrics_postgres_*.csv')
-    m_my = latest('metrics_mysql_*.csv')
+    tps_pg = latest('results/tps_postgres_*.csv')
+    tps_my = latest('results/tps_mysql_*.csv')
+    m_pg = latest('results/metrics_postgres_*.csv')
+    m_my = latest('results/metrics_mysql_*.csv')
     
     # Compute statistics
     stats_pg = compute_stats(tps_pg)
