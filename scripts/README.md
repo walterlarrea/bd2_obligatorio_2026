@@ -17,6 +17,9 @@ Archivos principales:
 - `benchmark_runner.py`: orquesta clientes concurrentes que ejecutan `UPDATE` durante un tiempo.
 - `worker.py`: lógica de cliente que realiza los `UPDATE`.
 - `collect_metrics.py`: recoge métricas de Postgres y MySQL durante la prueba.
+- `plot_results.py`: genera gráficas PNG comparativas.
+- `generate_html_report.py`: genera reporte HTML interactivo con análisis.
+- `run_full_benchmark.py`: orquestador automatizado (Docker + DB + benchmark + reportes).
 
 Uso (ejemplo rápido):
 
@@ -66,3 +69,67 @@ python scripts/benchmark_runner.py --engine postgres --host localhost --port 543
 ```bash
 docker-compose down -v
 ```
+
+## Quick Start (Automatizado)
+
+Si prefieres ejecutar todo en un solo comando:
+
+```bash
+python scripts/run_full_benchmark.py --rows 100000 --workers 8 --duration 300
+```
+
+Esto lanzará:
+
+1. Docker (Postgres + MySQL)
+2. Población de tablas (100k filas en cada motor)
+3. Benchmarks concurrentes (8 workers, 5 minutos)
+4. Generación de gráficas de comparación
+5. Limpieza de contenedores
+
+Opciones disponibles:
+
+```bash
+python scripts/run_full_benchmark.py --help
+```
+
+Ejemplos:
+
+- Smoke test (10k filas, 4 workers, 60s): `python scripts/run_full_benchmark.py --rows 10000 --workers 4 --duration 60`
+- Benchmark pesado (1M filas, 16 workers, 10 min): `python scripts/run_full_benchmark.py --rows 1000000 --workers 16 --duration 600`
+- Solo un motor: `python scripts/run_full_benchmark.py --engines postgres --rows 100000`
+- Sin parar contenedores al final: `python scripts/run_full_benchmark.py --no-stop`
+
+## Resultados y Análisis
+
+Los scripts generan los siguientes archivos:
+
+- `tps_postgres_<timestamp>.csv`: TPS por intervalo (Postgres)
+- `tps_mysql_<timestamp>.csv`: TPS por intervalo (MySQL)
+- `metrics_postgres_<timestamp>.csv`: Métricas MVCC (Postgres): `n_tup_upd`, `n_dead_tup`, `rel_size_bytes`
+- `metrics_mysql_<timestamp>.csv`: Métricas MVCC (MySQL): `history_list_length`
+- `comparison_tps.png`: Gráfica comparativa de TPS
+- `comparison_metrics.png`: Gráfica comparativa de métricas internas MVCC
+- **`benchmark_report.html`**: Reporte interactivo con gráficas incrustadas, estadísticas y análisis detallado
+
+### Reporte HTML
+
+Después de ejecutar `run_full_benchmark.py`, abre `benchmark_report.html` en tu navegador para ver:
+
+- **Resumen visual** con KPIs clave (Avg TPS, Max TPS, Total Updates)
+- **Gráficas comparativas** incrustadas en PNG
+- **Análisis profundo** de diferencias MVCC:
+  - Write Amplification en PostgreSQL (table bloat)
+  - Undo Log contention en MySQL (history list length)
+  - Tabla comparativa de trade-offs arquitectónicos
+  - Recomendaciones de uso basadas en workload
+
+### Interpretación de Resultados
+
+**PostgreSQL:**
+
+- `n_dead_tup` (filas muertas): crece durante la prueba si el Autovacuum no da abasto
+- `rel_size_bytes` (tamaño de la tabla): tiende a crecer por Write Amplification
+
+**MySQL (InnoDB):**
+
+- `history_list_length`: número de versiones viejas en el Undo Log. Idealmente cercano a 0. Si crece mucho durante la prueba, indica contención.
