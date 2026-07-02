@@ -18,7 +18,8 @@ def collect_postgres(conn, table, interval, stop_event, out_csv):
             time.sleep(interval)
 
 def _parse_history_list(innodb_status_text):
-    m = re.search(r'History list length\s+(\d+)', innodb_status_text)
+    # Accept variations like 'History list length 0' or 'History list length: 0'
+    m = re.search(r'History list length\s*:?\s*(\d+)', innodb_status_text, re.IGNORECASE)
     if m:
         return int(m.group(1))
     return None
@@ -30,7 +31,12 @@ def collect_mysql(conn, interval, stop_event, out_csv):
         writer.writerow(['ts','history_list_length'])
         while not stop_event.is_set():
             cur.execute('SHOW ENGINE INNODB STATUS')
-            txt = '\n'.join([row[0] for row in cur.fetchall()])
+            rows = cur.fetchall()
+            # Join all columns and rows into a single text block to be robust
+            txt_parts = []
+            for row in rows:
+                txt_parts.append(' '.join([str(col) for col in row if col is not None]))
+            txt = '\n'.join(txt_parts)
             hll = _parse_history_list(txt)
             writer.writerow([int(time.time()), hll])
             fh.flush()

@@ -68,6 +68,16 @@ def main():
     print(f'Starting benchmark: engine={args.engine} workers={args.workers} duration={args.duration}s')
     start = time.time()
     last_count = 0
+    tps_csv = f'tps_{args.engine}_{int(start)}.csv'
+    # write header for TPS CSV
+    try:
+        tfh = open(tps_csv, 'w', newline='')
+        import csv as _csv
+        tw = _csv.writer(tfh)
+        tw.writerow(['ts','elapsed_s','total_updates','interval_tps'])
+    except Exception:
+        tfh = None
+        tw = None
     try:
         while time.time() - start < args.duration:
             time.sleep(5)
@@ -77,6 +87,9 @@ def main():
             tps = (total - last_count) / 5.0
             last_count = total
             print(f'[{int(elapsed)}s] total_updates={total} last_5s_tps={tps:.1f}')
+            if tw:
+                tw.writerow([int(now), int(elapsed), total, round(tps,1)])
+                tfh.flush()
     except KeyboardInterrupt:
         print('Interrupted, stopping...')
     finally:
