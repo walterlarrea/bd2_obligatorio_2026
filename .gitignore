@@ -1,2 +1,9 @@
+# Ignore database raw data directories
 mysqldata
 pgdata
+
+# 
+*.csv
+*.html
+*.png
+*.pyc
