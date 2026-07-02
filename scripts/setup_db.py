@@ -28,6 +28,9 @@ def setup_postgres(conn, table, rows):
       updated_at timestamptz DEFAULT now()
     );
     """)
+    # cur.execute(f"""
+    # CREATE INDEX IF NOT EXISTS counters_index ON {table} (contador)
+    # """)
     conn.commit()
     cur.execute(f"SELECT count(*) FROM {table}")
     existing = cur.fetchone()[0]

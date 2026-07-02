@@ -5,6 +5,7 @@ import csv
 
 def collect_postgres(conn, table, interval, stop_event, out_csv):
     cur = conn.cursor()
+    conn.autocommit = True
     with open(out_csv, 'w', newline='') as fh:
         writer = csv.writer(fh)
         writer.writerow(['ts','n_tup_upd','n_dead_tup','rel_size_bytes'])

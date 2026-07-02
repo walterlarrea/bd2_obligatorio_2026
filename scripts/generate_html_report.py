@@ -203,7 +203,7 @@ def generate_html(html_file='results/benchmark_report.html'):
         </div>
         
         <div class="analysis">
-            <h2>� Glosario & Términos Técnicos</h2>
+            <h2>Glosario & Términos Técnicos</h2>
             <table class="comparison-table">
                 <thead>
                     <tr>
