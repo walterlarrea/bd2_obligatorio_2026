@@ -23,7 +23,7 @@ PostgreSQL y MySQL son, hoy en día, los dos Sistemas Gestores de Bases de Datos
 
 ## Marco Teórico (Conceptos Clave a Desarrollar)
 
-- **SGBD Relacionales y ACID:** Principios de aislamiento (Isolation) y durabilidad (Durability) en entornos multiusuario. _Nota de alcance: este documento se enfoca deliberadamente en las propiedades de Isolation y Durability por ser las directamente involucradas en MVCC y en las estrategias de recuperación (WAL/Undo Log/Binlog); Atomicity y Consistency quedan fuera del alcance comparativo de este trabajo._
+- **SGBD Relacionales y ACID:** Principios de atomicidad (Atomicity), consistencia (Consistency), aislamiento (Isolation) y durabilidad (Durability) en entornos multiusuario.
 - **Mecanismo MVCC (Multi-Version Concurrency Control):** Estrategias para evitar bloqueos de lectura/escritura mediante el manejo de instantáneas (_snapshots_).
 - **Estructuras de Almacenamiento Físico:** Comparativa entre tablas organizadas como _Heap_ (PostgreSQL) frente a Tablas Organizadas por Índice o _Clustered Indexes_ (MySQL InnoDB).
 - **Efecto Write Amplification y Bloat:** La problemática del engrosamiento de archivos de datos derivado de la persistencia de versiones muertas de filas en el mismo espacio físico.
@@ -154,6 +154,8 @@ SELECT *
 - **El Problema del Bloat y VACUUM:** Al acumular versiones viejas en las tablas, el espacio en disco se infla (**Bloat**). PostgreSQL depende críticamente del proceso **VACUUM** (usualmente automatizado por _Autovacuum_) para escanear las páginas, liberar el espacio ocupado por filas muertas para que pueda ser reutilizado, y actualizar las estadísticas del optimizador.
 - **Nivel de Aislamiento por Defecto:** PostgreSQL utiliza **Read Committed** como nivel de aislamiento por defecto. Bajo este esquema, cada sentencia dentro de una transacción toma su propio _snapshot_ actualizado, por lo que dos sentencias `SELECT` sucesivas dentro de la misma transacción pueden ver datos distintos si hubo confirmaciones concurrentes de otras transacciones entre medio.
 
+> En PostgreSQL, el nivel de aislamiento se puede cambiar (Ej: por **Read Committed** o serializable) a nivel de servidor, base de datos, rol (usuario) o por sesión.
+
 #### Comparación con MySQL
 
 - **Modificación In-Place y Undo Logs:** MySQL (InnoDB) maneja el MVCC de forma inversa. Cuando ejecutas un `UPDATE`, el motor modifica la fila **directamente en su sitio físico original** de la tabla. La versión anterior (el pasado) se desplaza a una estructura de archivos totalmente independiente llamada **Undo Log**.
@@ -187,6 +189,36 @@ SELECT *
 
 1. **Redo Log:** Un archivo circular exclusivo del motor InnoDB encargado puramente del _Crash Recovery_ físico ante apagones.
 2. **Binlog (Binary Log):** Un registro de transacciones a nivel lógico del servidor MySQL (independiente del motor), indispensable para realizar la replicación entre nodos y para la recuperación hacia un punto específico en el tiempo (PITR - Point-In-Time Recovery).
+
+---
+
+### 8. Atomicidad (Atomicity)
+
+#### PostgreSQL
+
+- **Bloques Transaccionales:** Toda sentencia individual es atómica por defecto, pero PostgreSQL permite agrupar múltiples operaciones dentro de un bloque explícito `BEGIN` / `COMMIT` / `ROLLBACK`, garantizando que el conjunto completo se aplique o se descarte como una unidad indivisible.
+- **Savepoints:** Dentro de una transacción, `SAVEPOINT` permite definir puntos de retorno intermedios. Un `ROLLBACK TO SAVEPOINT` deshace únicamente los cambios posteriores a ese punto sin abortar toda la transacción, lo que resulta útil para manejar errores parciales en lógica de aplicación compleja.
+- **DDL Transaccional:** Una particularidad importante de PostgreSQL es que la mayoría de las sentencias de definición de datos (`CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`) son también transaccionales: pueden incluirse dentro de un bloque `BEGIN`/`COMMIT` y revertirse junto con el resto de las operaciones si algo falla.
+
+#### Comparación con MySQL
+
+- **Dependencia del Storage Engine:** La atomicidad en MySQL depende del motor de almacenamiento utilizado. Motores transaccionales como **InnoDB** soportan `BEGIN`/`COMMIT`/`ROLLBACK` real.
+- **DDL No Transaccional:** A diferencia de PostgreSQL, la mayoría de las sentencias DDL en MySQL provocan un _commit implícito_ antes y después de ejecutarse, por lo que no pueden incluirse dentro de una transacción reversible junto con operaciones DML.
+
+---
+
+### 9. Consistencia (Consistency)
+
+#### PostgreSQL
+
+- **Restricciones de Integridad:** PostgreSQL ofrece un catálogo completo de restricciones declarativas para mantener la base de datos en un estado válido tras cada transacción: `PRIMARY KEY`, `FOREIGN KEY`, `UNIQUE`, `NOT NULL` y `CHECK` (esta última permite expresiones arbitrarias, incluyendo subconsultas y funciones).
+- **Restricciones Diferibles (`DEFERRABLE`):** Una capacidad distintiva de PostgreSQL es la posibilidad de marcar una restricción como `DEFERRABLE`, postergando su validación hasta el momento del `COMMIT` en lugar de evaluarla en cada sentencia individual. Esto es indispensable, por ejemplo, para resolver referencias circulares entre tablas dentro de una misma transacción.
+- **Consistencia y MVCC:** Gracias a los _snapshots_ consistentes que provee MVCC, cada transacción visualiza siempre una versión coherente de la base de datos, nunca un estado intermedio producido por otra transacción en curso.
+
+#### Comparación con MySQL
+
+- **Soporte Histórico de Restricciones:** El soporte de MySQL para restricciones de integridad fue tradicionalmente más limitado. Las `FOREIGN KEY` solo se aplican en el motor InnoDB (no en MyISAM), y las restricciones `CHECK` fueron ignoradas silenciosamente (aceptadas en la sintaxis pero sin efecto real) hasta la versión 8.0.16, lanzada en 2019.
+- **`sql_mode` y Consistencia Flexible:** Históricamente, el modo por defecto de MySQL era más permisivo: podía truncar valores fuera de rango o insertar "valores cero" en columnas `NOT NULL` sin lanzar un error, en lugar de rechazar la transacción. Desde MySQL 5.7, el modo estricto (`STRICT_TRANS_TABLES`) viene habilitado por defecto y acerca su comportamiento al de PostgreSQL, aunque sigue siendo una configuración ajustable (y en algunos entornos legacy, desactivada).
 
 ---
 
